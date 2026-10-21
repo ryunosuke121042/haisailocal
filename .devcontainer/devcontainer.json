@@ -1,0 +1,41 @@
+{
+  "name": "haisailocal",
+  // Vercel Functions が対応している Node.js 22 を使う
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:1-22-bookworm",
+
+  "mounts": [
+    // node_modules はコンテナ内のボリュームに置き、OneDrive の同期対象から外す（Windows でのインストールも速くなる）
+    "source=haisailocal-node_modules,target=${containerWorkspaceFolder}/node_modules,type=volume",
+    // vercel login の情報を、コンテナを作り直しても残す
+    "source=haisailocal-vercel-cli,target=/home/node/.local/share/com.vercel.cli,type=volume"
+  ],
+
+  // ボリュームの所有者を node ユーザーにし、Vercel CLI を入れ、package.json があれば依存を入れる
+  "postCreateCommand": "sudo chown -R node:node node_modules /home/node/.local/share/com.vercel.cli && npm install -g vercel && if [ -f package.json ]; then npm install; fi",
+
+  "forwardPorts": [5173, 3000, 5555],
+  "portsAttributes": {
+    "5173": { "label": "Vite" },
+    "3000": { "label": "vercel dev" },
+    "5555": { "label": "Prisma Studio" }
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "Prisma.prisma"
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "[prisma]": {
+          "editor.defaultFormatter": "Prisma.prisma"
+        }
+      }
+    }
+  },
+
+  "remoteUser": "node"
+}

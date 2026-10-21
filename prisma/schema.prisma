@@ -1,0 +1,463 @@
+// 仕様書01（docs/01_spec.md）を土台に、02（docs/02_mvp_spec.md）の予約方式（時間枠の即時確定・即公開・期限と定額のキャンセル料）を採ったスキーマ
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("haisailocal_DATABASE_URL")
+  directUrl = env("haisailocal_DATABASE_URL_UNPOOLED")
+}
+
+enum Role {
+  TRAVELER
+  BUSINESS
+  ADMIN
+}
+
+enum Category {
+  EXPERIENCE
+  RESTAURANT
+  TOUR
+}
+
+enum ListingStatus {
+  DRAFT // 必須項目が足りない（公開できない）
+  PUBLISHED // 公開中（保存すると即公開）
+  HIDDEN // 事業者が「非公開にする」を押した
+  SUSPENDED // 運営が非公開にした（報告を受けて DB で直接変更する）
+}
+
+enum PaymentMethod {
+  CASH_ONLY
+  CARD_OK
+}
+
+enum Crowd {
+  LOCAL
+  MIXED
+  TOURIST
+}
+
+enum Regulars {
+  REGULARS
+  NEWCOMERS
+}
+
+enum OwnerDistance {
+  OWNER
+  STAFF
+}
+
+enum YearsBand {
+  UNDER_10
+  FROM_10_TO_30
+  OVER_30
+}
+
+enum Cutoff {
+  SAME_DAY
+  DAY_BEFORE
+  TWO_DAYS_BEFORE
+}
+
+enum FreeCancel {
+  SAME_DAY
+  DAY_BEFORE
+  THREE_DAYS_BEFORE
+}
+
+enum CourseStyle {
+  COURSE
+  ALACARTE
+  BOTH
+}
+
+// 確定 → 来店済み／来店なし／旅行者キャンセル／事業者キャンセル
+// 「来店済み」は保存せず、来店時刻を過ぎた CONFIRMED を来店済みとして表示する
+enum ReservationStatus {
+  CONFIRMED
+  NO_SHOW
+  CANCELED_BY_TRAVELER
+  CANCELED_BY_BUSINESS
+}
+
+enum BizCancelReason {
+  CLOSURE
+  WEATHER
+  OTHER
+}
+
+model User {
+  id                 String    @id @default(cuid())
+  email              String    @unique
+  passwordHash       String
+  role               Role      @default(TRAVELER)
+  name               String    @default("") // 旅行者名（事業者の予約一覧に出す）
+  businessId         String?
+  business           Business? @relation(fields: [businessId], references: [id])
+  lang               String    @default("en")
+  currency           String    @default("USD")
+  privacyConsentAt   DateTime?
+  // カードは登録のみ（請求しない）。決済代行は要確認のため、MVPは登録画面を通ったことだけを記録する
+  cardRegisteredAt   DateTime?
+  sensitiveConsentAt DateTime? // 宗教上の制限・アレルギーを聞く前の同意
+  // 今日の希望（予算・食事制限・宗教上の制限・アレルギー）。その日に初めて開いたときに確認し直す
+  prefs              Json?
+  prefsDate          String?
+  characterHidden    Boolean   @default(false)
+  createdAt          DateTime  @default(now())
+
+  sessions         Session[]
+  resets           PasswordReset[]
+  reservations     Reservation[]
+  conversations    Conversation[]
+  blockedBy        Block[]
+  saved            SavedListing[]
+  notifications    Notification[]
+  pushSubs         PushSubscription[]
+  translationFlags TranslationReport[]
+}
+
+model Session {
+  token     String   @id
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+}
+
+model PasswordReset {
+  token     String    @id
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  usedAt    DateTime?
+}
+
+// 事業者アカウント。家族が複数の端末から同じアカウントでログインできる
+model Business {
+  id              String    @id @default(cuid())
+  name            String
+  // 当日予約の来店前メールを何分前に送るか（既定15分）
+  reminderMinutes Int       @default(15)
+  createdAt       DateTime  @default(now())
+  users           User[]
+  listings        Listing[]
+  blocks          Block[]
+}
+
+model Listing {
+  id               String         @id @default(cuid())
+  businessId       String
+  business         Business       @relation(fields: [businessId], references: [id])
+  status           ListingStatus  @default(DRAFT)
+  // 共通項目（日本語で入力し、表示時に英語・簡体字へ自動翻訳）
+  category         Category?
+  nameJa           String         @default("")
+  area             String         @default("") // shared/areas.ts のコード
+  address          String         @default("")
+  descriptionJa    String         @default("")
+  photos           String[] // data URL（端末で縮小してから保存）
+  appealJa         String         @default("") // アピールポイント（例：豚肉を使っていません）
+  dressJa          String         @default("") // 服装の目安
+  extraInfo        Json           @default("[]") // 事業者が任意で足す情報 [{ labelJa: "Wi-Fi", valueJa: "あり" }]
+  lat              Float? // 住所を入力し、地図のピンで確かめて保存する
+  lng              Float?
+  languages        String[] // 店の対応言語
+  soloWelcome      Boolean        @default(false)
+  // 食べ物の情報
+  halalCertified   Boolean        @default(false)
+  allergenFreeShop String[] // お店全体で使っていないアレルギー物質
+  adjustLess       Boolean        @default(false) // 材料の調整：少なめ
+  adjustRemove     Boolean        @default(false) // 材料の調整：抜き
+  porkFreeMention  Boolean        @default(false) // アピールポイントに豚肉不使用の記述（ハラルの「参考」）
+  priceJpy         Int? // 1人あたり
+  durationMin      Int?
+  paymentMethod    PaymentMethod?
+  // 地元らしさの情報
+  crowd            Crowd?
+  regulars         Regulars?
+  guidebook        Boolean? // ガイドブック・ツアー会社への掲載
+  yearsBand        YearsBand?
+  ownerDistance    OwnerDistance?
+  stationJa        String         @default("") // 最寄りの主要駅
+  stationMinutes   Int?
+  // 体験
+  itemsToBringJa   String         @default("")
+  minParticipants  Int            @default(1)
+  // 飲食店
+  dietSupport      String[] // 対応できる食事制限（shared/constants.ts の DIET_SUPPORT）
+  courseStyle      CourseStyle?
+  // ツアー
+  meetingPointJa   String         @default("")
+  itineraryJa      String         @default("")
+  guideLanguages   String[]
+  // 予約の設定
+  slots            Json           @default("[]") // [{ time: "10:00", capacity: 6 }]
+  closedWeekdays   Int[] // 0=日 … 6=土
+  cutoff           Cutoff         @default(DAY_BEFORE)
+  freeCancel       FreeCancel     @default(DAY_BEFORE)
+  lateFeeJpy       Int? // 期限後のキャンセル料（1人あたり）。null = なし
+  publishedAt      DateTime? // 一覧の新着順に使う（最初に公開した日時）
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  closedDates   ClosedDate[]
+  reservations  Reservation[]
+  conversations Conversation[]
+  reports       ListingReport[]
+  dishes        Dish[]
+  reviews       Review[]
+  saved         SavedListing[]
+
+  @@index([status, publishedAt])
+}
+
+// 料理ごとのアレルギー物質
+model Dish {
+  id        String   @id @default(cuid())
+  listingId String
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  nameJa    String
+  allergens String[]
+}
+
+// 受付停止日
+model ClosedDate {
+  listingId String
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  date      String // YYYY-MM-DD（日本時間）
+
+  @@id([listingId, date])
+}
+
+model Reservation {
+  id               String            @id @default(cuid())
+  travelerId       String
+  traveler         User              @relation(fields: [travelerId], references: [id])
+  listingId        String
+  listing          Listing           @relation(fields: [listingId], references: [id])
+  status           ReservationStatus @default(CONFIRMED)
+  date             String
+  time             String
+  visitAt          DateTime
+  partySize        Int
+  dietary          String[] // shared/constants.ts の DIETARY
+  message          String            @default("") // 旅行者の原文
+  messageLang      String            @default("en")
+  messageJa        String            @default("") // 事業者向けの日本語訳
+  // 確定時点の条件（あとで店が設定を変えても、同意した条件で扱う）
+  payJpy           Int // 現地で払う金額（1人あたりの料金×人数）
+  freeCancel       FreeCancel
+  lateFeeJpy       Int?
+  cancelDeadlineAt DateTime
+  policyAgreedAt   DateTime
+  // キャンセル
+  canceledAt       DateTime?
+  lateCancel       Boolean           @default(false) // 無料キャンセルの期限後に旅行者がキャンセルした
+  cancelFeeJpy     Int? // 期限後のキャンセル料の目安（自動では請求しない。運営が判断する）
+  bizCancelReason  BizCancelReason?
+  bizCancelNoteJa  String            @default("")
+  noShowAt         DateTime?
+  createdAt        DateTime          @default(now())
+  review           Review?
+
+  @@index([listingId, date, time, status])
+  @@index([travelerId, visitAt])
+}
+
+// 旅行者 × 店舗ごとに1スレッド（予約前でも予約後でも使う）
+model Conversation {
+  id         String    @id @default(cuid())
+  travelerId String
+  traveler   User      @relation(fields: [travelerId], references: [id])
+  listingId  String
+  listing    Listing   @relation(fields: [listingId], references: [id])
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  messages   Message[]
+
+  @@unique([travelerId, listingId])
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderRole     Role
+  body           String // 原文
+  lang           String
+  translated     String       @default("") // 相手の言語への訳
+  translatedLang String       @default("")
+  hasPhoto       Boolean      @default(false) // 写真つき（写真は MessagePhoto。会話の読み込みを重くしないため別にする）
+  photo          MessagePhoto?
+  createdAt      DateTime     @default(now())
+  readAt         DateTime?
+
+  @@index([conversationId, createdAt])
+}
+
+/// チャットに添付した写真（端末側で縮小した data URL）
+model MessagePhoto {
+  messageId String  @id
+  message   Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  data      String
+}
+
+// 事業者がチャット相手をブロックする（チャットと予約を受け付けない）
+model Block {
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id])
+  travelerId String
+  traveler   User     @relation(fields: [travelerId], references: [id])
+  createdAt  DateTime @default(now())
+
+  @@id([businessId, travelerId])
+}
+
+// 「この店舗を報告」。運営が DB を見て、必要なら Listing.status を SUSPENDED にする
+model ListingReport {
+  id        String   @id @default(cuid())
+  listingId String
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  userId    String?
+  reason    String
+  status    String   @default("OPEN") // OPEN / DONE
+  createdAt DateTime @default(now())
+}
+
+// 翻訳キャッシュ（同じ文を何度も翻訳しない）
+model Translation {
+  id         String   @id @default(cuid())
+  key        String   @unique // sha256(from|to|source)
+  source     String
+  sourceLang String
+  targetLang String
+  text       String
+  provider   String
+  createdAt  DateTime @default(now())
+}
+
+// 送信したメールの記録。RESEND_API_KEY がなければ送らずにここへ残すだけ（開発用）
+model EmailOutbox {
+  id          String   @id @default(cuid())
+  to          String
+  subject     String
+  body        String
+  kind        String
+  refKey      String? // 取り消し用（例 remind:<予約ID>）
+  scheduledAt DateTime @default(now())
+  status      String   @default("PENDING") // PENDING / SCHEDULED / SENT / FAILED / LOGGED / CANCELED
+  providerId  String?
+  error       String?
+  createdAt   DateTime @default(now())
+
+  @@index([status, scheduledAt])
+  @@index([refKey])
+}
+
+model ExchangeRate {
+  id        String   @id @default("latest")
+  rates     Json // 1円あたりの各通貨
+  source    String
+  fetchedAt DateTime
+}
+
+// 来店後の評価：来店済みの予約だけ、1予約につき1件。星と選択式のタグだけ（自由記述なし）
+model Review {
+  id             String      @id @default(cuid())
+  reservationId  String      @unique
+  reservation    Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  listingId      String
+  listing        Listing     @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  stars          Int
+  tags           String[]
+  photoCount     Int         @default(0)
+  photos         ReviewPhoto[]
+  // 任意の「あなたについて」（集計してグラフにだけ使う。宗教を含むため本人の同意があるときだけ保存）
+  country        String?
+  religion       String?
+  gender         String?
+  ageBand        String?
+  scene          String?
+  hidden         Boolean     @default(false) // 運営が非表示にした（削除申出への対応など）
+  takedownReason String      @default("") // 店からの削除申出
+  takedownAt     DateTime?
+  createdAt      DateTime    @default(now())
+
+  @@index([listingId])
+}
+
+/// レビューの写真（端末側で縮小した data URL）
+model ReviewPhoto {
+  id       String @id @default(cuid())
+  reviewId String
+  review   Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  idx      Int
+  data     String
+
+  @@unique([reviewId, idx])
+}
+
+// 保存リスト
+model SavedListing {
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listingId String
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@id([userId, listingId])
+}
+
+// アプリ内の通知（旅行者・事業者）。visibleAt が来るまでは見せない（前日リマインドなど）
+model Notification {
+  id         String    @id @default(cuid())
+  userId     String?
+  user       User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  businessId String?
+  type       String
+  payload    Json
+  visibleAt  DateTime  @default(now())
+  readAt     DateTime?
+  refKey     String? // 取り消し用（例 remind:<予約ID>）
+  createdAt  DateTime  @default(now())
+
+  @@index([userId, visibleAt])
+  @@index([businessId, visibleAt])
+}
+
+// 事業者のプッシュ通知の宛先（端末ごと）
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+}
+
+// 「翻訳がおかしい」報告（旅行者・事業者）
+model TranslationReport {
+  id         String   @id @default(cuid())
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  source     String
+  shown      String
+  targetLang String
+  context    String   @default("")
+  status     String   @default("OPEN") // OPEN / DONE
+  createdAt  DateTime @default(now())
+}
+
+// AIとのやりとりのログ（保存期間を過ぎたら削除する）
+model AiLog {
+  id        String   @id @default(cuid())
+  kind      String
+  input     String
+  output    String
+  createdAt DateTime @default(now())
+}

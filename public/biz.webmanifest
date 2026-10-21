@@ -1,0 +1,15 @@
+{
+  "name": "haisailocal 事業者",
+  "short_name": "haisailocal",
+  "start_url": "/biz",
+  "scope": "/biz",
+  "display": "standalone",
+  "background_color": "#121a30",
+  "theme_color": "#121a30",
+  "lang": "ja",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}
