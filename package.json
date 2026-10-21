@@ -11,6 +11,7 @@
     "test": "vitest run",
     "db:push": "node --env-file=.env.local node_modules/prisma/build/index.js db push",
     "db:seed": "node --env-file=.env.local --import tsx prisma/seed.ts",
+    "admin:create": "node --env-file=.env.local --import tsx prisma/create-admin.ts",
     "db:studio": "node --env-file=.env.local node_modules/prisma/build/index.js studio",
     "postinstall": "prisma generate"
   },
