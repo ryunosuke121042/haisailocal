@@ -121,7 +121,7 @@ const es: Dict = {
   budgetNote: 'El presupuesto solo sirve para subir en la lista los lugares que encajan. No oculta nada.',
   sensitiveTitle: 'Normas religiosas y alergias',
   sensitiveWhy:
-    'Solo lo preguntamos para ocultar los lugares que no encajan contigo. La información religiosa es información personal sensible según la ley japonesa, y tratamos las alergias de la misma manera. Tus respuestas se guardan en tu perfil y, mientras Maru esté visible, pueden enviarse al servicio de IA (Anthropic, EE. UU.) cuando Maru convierte tus deseos en condiciones de búsqueda. Puedes retirar tu consentimiento en Ajustes cuando quieras; entonces se borrarán tus respuestas.',
+    'Solo lo preguntamos para ocultar los lugares que no encajan contigo. La información religiosa es información personal sensible según la ley japonesa, y tratamos las alergias de la misma manera. Tus respuestas se guardan en tu perfil y, mientras Maru esté visible, pueden enviarse al servicio de IA ({ai}, EE. UU.) cuando Maru convierte tus deseos en condiciones de búsqueda. Puedes retirar tu consentimiento en Ajustes cuando quieras; entonces se borrarán tus respuestas.',
   sensitiveAgree: 'Acepto y quiero que se oculten automáticamente los lugares que no encajen',
   sensitiveOffNote: 'Sin tu consentimiento, se saltan estas preguntas.',
   allergyAskShop: 'Si tienes una alergia grave, confírmalo siempre con el lugar antes de reservar y al llegar.',
@@ -497,6 +497,7 @@ const es: Dict = {
   starsOf: "{n} estrellas",
   visitedIn: "Visita en {month}",
   introSkip: "Saltar",
+  reportTranslationConfirm: "¿Avisar al operador de que esta traducción es incorrecta?",
   chatPlaceholder: 'Escribe un mensaje',
   noMessages: 'Aún no hay mensajes.',
 
@@ -509,7 +510,7 @@ const es: Dict = {
   password: 'Contraseña',
   passwordHint: 'Al menos 8 caracteres',
   privacySummary:
-    'Usamos tu correo para enviarte avisos de reservas y mensajes, y compartimos tu nombre, tu reserva y tus mensajes con el lugar que contactas. Los mensajes y anuncios los traduce una IA (Anthropic, EE. UU.) o, en esta demo, el servicio gratuito de traducción automática MyMemory (Translated S.r.l., Italia); solo se envía el texto, nunca tu nombre ni tu correo.',
+    'Usamos tu correo para enviarte avisos de reservas y mensajes, y compartimos tu nombre, tu reserva y tus mensajes con el lugar que contactas. Los mensajes y anuncios los traduce una IA ({ai}, EE. UU.) o, en esta demo, el servicio gratuito de traducción automática MyMemory (Translated S.r.l., Italia); solo se envía el texto, nunca tu nombre ni tu correo.',
   privacyAgree: 'Acepto la Política de privacidad y los Términos',
   readPrivacy: 'Política de privacidad',
   readTerms: 'Términos de uso',

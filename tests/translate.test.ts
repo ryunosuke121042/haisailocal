@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { detectLang } from '../server/translate';
+import { detectLang, looksLike } from '../server/translate';
 
 describe('detectLang', () => {
   it('detects the language from the script, not the display language', () => {
@@ -9,5 +9,19 @@ describe('detectLang', () => {
     expect(detectLang('有停车场吗？', 'en')).toBe('zh');
     expect(detectLang('Y a-t-il un parking ?', 'fr')).toBe('fr');
     expect(detectLang('👍', 'es')).toBe('es');
+  });
+});
+
+describe('looksLike（訳が目的の言語か）', () => {
+  it('韓国語なのに英語で返ってきた訳は使わない', () => {
+    expect(looksLike('말차와 단맛 시즈쿠안', 'ko')).toBe(true);
+    expect(looksLike('Matcha & Sweets Shizukuan', 'ko')).toBe(false);
+    expect(looksLike('抹茶与甜品 雫庵', 'zh')).toBe(true);
+    expect(looksLike('抹茶と甘味', 'zh')).toBe(false);
+    expect(looksLike('Matcha & Sweets', 'en')).toBe(true);
+    expect(looksLike('抹茶と甘味', 'en')).toBe(false);
+    expect(looksLike('¥1,500', 'ko')).toBe(true);
+    expect(looksLike('Wi-Fi', 'ko', 'Wi-Fi')).toBe(true);
+    expect(looksLike('Test_Mentor cafeteria', 'ko', 'TEST_メンター食堂')).toBe(false);
   });
 });

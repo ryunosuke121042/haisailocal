@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { ApiError, post } from '../api';
 import { useApp } from '../store';
+import { aiServiceName } from '../components/ui';
 import type { Me } from '../types';
 import { useCharacter } from '../components/Character';
 
@@ -75,7 +76,7 @@ export function Signup() {
         <span className="small muted">{t('passwordHint')}</span>
       </label>
       <div className="consent-box small">
-        <p>{t('privacySummary')}</p>
+        <p>{t('privacySummary', { ai: aiServiceName(config) })}</p>
         <p>
           <Link to={`/${lang}/privacy`} target="_blank">
             {t('readPrivacy')}

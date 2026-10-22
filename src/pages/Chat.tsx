@@ -47,7 +47,10 @@ export function Chat() {
     const id = setInterval(load, 15_000);
     return () => clearInterval(id);
   }, [load]);
-  useEffect(() => end.current?.scrollIntoView({ block: 'end' }), [th?.messages.length]);
+  // scrollIntoView は新しいブラウザでは Promise を返す。返り値を React に渡すと「片付けの関数」として呼ばれて落ちるので、{ } で包んで何も返さない
+  useEffect(() => {
+    end.current?.scrollIntoView({ block: 'end' });
+  }, [th?.messages.length]);
 
   if (me?.role !== 'TRAVELER') return <Navigate to={`/${lang}/signup?next=${encodeURIComponent(`/${lang}/chat/${listingId}`)}`} replace />;
   if (!th) return err ? <ErrorBox onRetry={load} /> : <Spinner />;
@@ -143,7 +146,11 @@ export function Chat() {
           </section>
           {photo && <PhotoPreview src={photo} removeLabel={t('removePhoto')} onRemove={() => setPhoto(null)} />}
           <form className="chat-input" onSubmit={send}>
-            <PhotoAttachButton labels={{ attach: t('attachPhoto'), remove: t('removePhoto'), unreadable: t('photoUnreadable') }} disabled={busy} onPick={setPhoto} />
+            <PhotoAttachButton
+              labels={{ attach: t('attachPhoto'), remove: t('removePhoto'), unreadable: t('photoUnreadable') }}
+              disabled={busy}
+              onPick={setPhoto}
+            />
             <textarea
               ref={input}
               rows={2}
@@ -157,6 +164,9 @@ export function Chat() {
               {t('send')}
             </button>
           </form>
+          <p className={`chat-count small muted ${text.length > LIMITS.messageMaxChars * 0.9 ? 'warn' : ''}`} aria-live="polite">
+            {text.length}/{LIMITS.messageMaxChars}
+          </p>
         </>
       ) : null}
       {sendErr && <p className="notice notice-error">{sendErr}</p>}

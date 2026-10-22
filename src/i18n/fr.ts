@@ -121,7 +121,7 @@ const fr: Dict = {
   budgetNote: "Le budget sert uniquement à placer plus haut les adresses qui correspondent. Il ne masque rien.",
   sensitiveTitle: 'Règles religieuses et allergies',
   sensitiveWhy:
-    "Nous vous le demandons uniquement pour masquer les lieux qui ne vous conviennent pas. Les informations religieuses sont des données personnelles sensibles selon la loi japonaise, et nous traitons les allergies de la même façon. Vos réponses sont enregistrées dans votre profil et, tant que Maru est affiché, peuvent être envoyées au service d'IA (Anthropic, États-Unis) lorsque Maru transforme vos souhaits en critères de recherche. Vous pouvez retirer votre consentement à tout moment dans les Réglages ; vos réponses sont alors supprimées.",
+    "Nous vous le demandons uniquement pour masquer les lieux qui ne vous conviennent pas. Les informations religieuses sont des données personnelles sensibles selon la loi japonaise, et nous traitons les allergies de la même façon. Vos réponses sont enregistrées dans votre profil et, tant que Maru est affiché, peuvent être envoyées au service d'IA ({ai}, États-Unis) lorsque Maru transforme vos souhaits en critères de recherche. Vous pouvez retirer votre consentement à tout moment dans les Réglages ; vos réponses sont alors supprimées.",
   sensitiveAgree: "J'accepte et je veux que les lieux non adaptés soient masqués automatiquement",
   sensitiveOffNote: 'Sans consentement, ces questions sont ignorées.',
   allergyAskShop: 'En cas d\'allergie grave, vérifiez toujours auprès du lieu avant de réserver et à votre arrivée.',
@@ -497,6 +497,7 @@ const fr: Dict = {
   starsOf: "{n} étoiles",
   visitedIn: "Visite en {month}",
   introSkip: "Passer",
+  reportTranslationConfirm: "Signaler cette traduction comme incorrecte à l’opérateur ?",
   chatPlaceholder: 'Écrire un message',
   noMessages: "Aucun message pour l'instant.",
 
@@ -509,7 +510,7 @@ const fr: Dict = {
   password: 'Mot de passe',
   passwordHint: 'Au moins 8 caractères',
   privacySummary:
-    "Nous utilisons votre e-mail pour vous envoyer les avis de réservation et de message, et partageons votre nom, votre réservation et vos messages avec le lieu que vous contactez. Les messages et les annonces sont traduits par IA (Anthropic, États-Unis) ou, dans cette démo, par le service gratuit de traduction automatique MyMemory (Translated S.r.l., Italie) ; seul le texte est envoyé, jamais votre nom ni votre e-mail.",
+    "Nous utilisons votre e-mail pour vous envoyer les avis de réservation et de message, et partageons votre nom, votre réservation et vos messages avec le lieu que vous contactez. Les messages et les annonces sont traduits par IA ({ai}, États-Unis) ou, dans cette démo, par le service gratuit de traduction automatique MyMemory (Translated S.r.l., Italie) ; seul le texte est envoyé, jamais votre nom ni votre e-mail.",
   privacyAgree: "J'accepte la Politique de confidentialité et les Conditions",
   readPrivacy: 'Politique de confidentialité',
   readTerms: "Conditions d'utilisation",

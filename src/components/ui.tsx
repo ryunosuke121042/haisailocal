@@ -28,6 +28,8 @@ export function TT({ v, as = 'span', context = '' }: { v: TText | undefined | nu
               type="button"
               className="link small tt-toggle"
               onClick={async () => {
+                // 確かめてから運営に送る（押し間違いで報告が届かないように）
+                if (!confirm(t('reportTranslationConfirm'))) return;
                 await post('/translation-report', { source: v.original, shown: v.text, targetLang: lang, context }).catch(() => {});
                 setReported(true);
               }}
@@ -235,4 +237,11 @@ export function deadlineText(iso: string | Date, lang: string) {
 
 export function dateText(date: string, lang: string) {
   return new Date(`${date}T00:00:00+09:00`).toLocaleDateString(lang, { timeZone: 'Asia/Tokyo', year: 'numeric', month: 'short', day: 'numeric', weekday: 'short' });
+}
+
+/** 文章の送り先として示す AI サービスの名前（設定に合わせる。どれもなければ「なし」） */
+export function aiServiceName(config: { aiProviders?: ('claude' | 'gemini')[] } | null | undefined) {
+  const names = { gemini: 'Google Gemini', claude: 'Anthropic Claude' } as const;
+  const list = config?.aiProviders ?? [];
+  return list.length ? list.map((p) => names[p]).join(' / ') : '—';
 }

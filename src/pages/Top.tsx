@@ -60,11 +60,11 @@ export default function Top() {
   const next = encodeURIComponent(`/${lang}`);
 
   /** デモ用：パスワードなしでデモ用アカウントに入り、その画面を開く */
-  async function demoLogin(role: 'traveler' | 'business' | 'admin') {
+  async function demoLogin(role: 'traveler' | 'business') {
     setBusy(role);
     try {
       await post('/auth/demo-login', { role });
-      location.href = role === 'traveler' ? `/${lang}` : role === 'business' ? '/biz' : '/admin';
+      location.href = role === 'traveler' ? `/${lang}` : '/biz';
     } catch {
       setBusy(null);
     }
@@ -104,9 +104,6 @@ export default function Top() {
               </button>
               <button className="btn" disabled={!!busy} onClick={() => void demoLogin('business')}>
                 🏪 {t('demoBusiness')}
-              </button>
-              <button className="btn btn-ghost" disabled={!!busy} onClick={() => void demoLogin('admin')}>
-                🛠 {t('demoAdmin')}
               </button>
             </div>
             <ol className="small top-demo-steps">

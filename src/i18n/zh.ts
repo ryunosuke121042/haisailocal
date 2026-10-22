@@ -121,7 +121,7 @@ const zh: Dict = {
   budgetNote: '预算只用于把合适的店铺排在前面，不会因此隐藏任何店铺。',
   sensitiveTitle: '宗教禁忌与过敏',
   sensitiveWhy:
-    '我们询问这些信息，只是为了隐藏不适合你的店铺。根据日本法律，宗教信息属于敏感个人信息，过敏信息我们也同样对待。你的回答会保存在你的个人资料中；在显示 Maru 期间，当 Maru 把你的愿望转换为搜索条件时，这些信息可能会被发送给 AI 服务（Anthropic，美国）。你可以随时在设置中撤回同意，届时你的回答将被删除。',
+    '我们询问这些信息，只是为了隐藏不适合你的店铺。根据日本法律，宗教信息属于敏感个人信息，过敏信息我们也同样对待。你的回答会保存在你的个人资料中；在显示 Maru 期间，当 Maru 把你的愿望转换为搜索条件时，这些信息可能会被发送给 AI 服务（{ai}，美国）。你可以随时在设置中撤回同意，届时你的回答将被删除。',
   sensitiveAgree: '我同意，并希望自动隐藏不适合的店铺',
   sensitiveOffNote: '如不同意，将跳过这些问题。',
   allergyAskShop: '如有严重过敏，请务必在预约前和到店时向店家确认。',
@@ -497,6 +497,7 @@ const zh: Dict = {
   starsOf: "{n}星",
   visitedIn: "{month}到访",
   introSkip: "跳过",
+  reportTranslationConfirm: "要向运营方报告这段翻译有误吗？",
   chatPlaceholder: '输入消息',
   noMessages: '还没有消息。',
 
@@ -509,7 +510,7 @@ const zh: Dict = {
   password: '密码',
   passwordHint: '至少8个字符',
   privacySummary:
-    '我们会用你的邮箱发送预约和消息通知，并将你的名字、预约和消息提供给你联系的店铺。消息和店铺信息由 AI（Anthropic，美国）或本演示中使用的免费机器翻译服务 MyMemory（Translated S.r.l.，意大利）翻译，仅发送文本内容，绝不会发送你的名字或邮箱。',
+    '我们会用你的邮箱发送预约和消息通知，并将你的名字、预约和消息提供给你联系的店铺。消息和店铺信息由 AI（{ai}，美国）或本演示中使用的免费机器翻译服务 MyMemory（Translated S.r.l.，意大利）翻译，仅发送文本内容，绝不会发送你的名字或邮箱。',
   privacyAgree: '我同意隐私政策和使用条款',
   readPrivacy: '隐私政策',
   readTerms: '使用条款',

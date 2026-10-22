@@ -26,6 +26,8 @@ export interface Me {
 export interface Config {
   translator: 'claude' | 'gemini' | 'mymemory' | 'none';
   ai: boolean;
+  /** 使っている AI（試す順） */
+  aiProviders?: ('claude' | 'gemini')[];
   email: 'resend' | 'outbox';
   pushPublicKey: string | null;
   demo: boolean;

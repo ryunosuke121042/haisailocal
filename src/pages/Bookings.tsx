@@ -508,7 +508,9 @@ function CancelSheet({ open, onClose, v, onDone }: { open: boolean; onClose: () 
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(false);
   const [terms, setTerms] = useState(v.cancelNow);
-  useEffect(() => setTerms(v.cancelNow), [v]);
+  useEffect(() => {
+    setTerms(v.cancelNow);
+  }, [v]);
   async function cancel() {
     setBusy(true);
     setErr(false);

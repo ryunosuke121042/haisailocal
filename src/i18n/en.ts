@@ -120,7 +120,7 @@ const en = {
   budgetNote: 'Budget is only used to put places that fit higher in the list. Nothing is hidden by it.',
   sensitiveTitle: 'Religious rules and allergies',
   sensitiveWhy:
-    'We ask this only to hide places that do not fit you. Religious information is sensitive personal information under Japanese law, and we treat allergies the same way. Your answers are saved to your profile and, while Maru is shown, may be sent to the AI service (Anthropic, USA) when Maru turns your wishes into search conditions. You can withdraw consent in Settings at any time; your answers are then deleted.',
+    'We ask this only to hide places that do not fit you. Religious information is sensitive personal information under Japanese law, and we treat allergies the same way. Your answers are saved to your profile and, while Maru is shown, may be sent to the AI service ({ai}, USA) when Maru turns your wishes into search conditions. You can withdraw consent in Settings at any time; your answers are then deleted.',
   sensitiveAgree: 'I agree, and want places that do not fit hidden automatically',
   sensitiveOffNote: 'Without consent, these questions are skipped.',
   allergyAskShop: 'If you have a serious allergy, always check with the place before booking and when you arrive.',
@@ -496,6 +496,7 @@ const en = {
   starsOf: "{n} stars",
   visitedIn: "Visited {month}",
   introSkip: "Skip",
+  reportTranslationConfirm: "Report this translation as wrong to the operator?",
   chatPlaceholder: 'Write a message',
   noMessages: 'No messages yet.',
 
@@ -508,7 +509,7 @@ const en = {
   password: 'Password',
   passwordHint: 'At least 8 characters',
   privacySummary:
-    'We use your email to send booking and message notices, and share your name, booking and messages with the place you contact. Messages and listings are translated by AI (Anthropic, USA) or, in this demo, by the free machine translation service MyMemory (Translated S.r.l., Italy); only the text is sent, never your name or email.',
+    'We use your email to send booking and message notices, and share your name, booking and messages with the place you contact. Messages and listings are translated by AI ({ai}, USA) or, in this demo, by the free machine translation service MyMemory (Translated S.r.l., Italy); only the text is sent, never your name or email.',
   privacyAgree: 'I agree to the Privacy Policy and Terms',
   readPrivacy: 'Privacy Policy',
   readTerms: 'Terms of Use',

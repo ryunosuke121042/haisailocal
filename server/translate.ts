@@ -118,6 +118,22 @@ export function detectLang(text: string, hint: Lang): Lang {
   return hint;
 }
 
+/**
+ * 訳が目的の言語になっているか（無料の機械翻訳は、日本語→韓国語を英語で返すことがある）。
+ * 文字の種類だけで見る：韓国語ならハングル、日本語ならかな・漢字、中国語なら漢字があり、
+ * 英・仏・西なら、かな・ハングルが残っていないこと。数字や記号だけの文は判定しない
+ */
+export function looksLike(text: string, to: Lang, source = ''): boolean {
+  // 原文がローマ字だけ（Wi-Fi など）なら、そのまま残っていてもよい
+  if (source && !/[\u3040-\u30ff\u4e00-\u9fff\uac00-\ud7af]/.test(source) && text.trim() === source.trim()) return true;
+  const letters = text.replace(/[\s\d\p{P}\p{S}]/gu, '');
+  if (!letters) return true;
+  if (to === 'ko') return /[\uac00-\ud7af]/.test(text);
+  if (to === 'ja') return /[\u3040-\u30ff\u4e00-\u9fff]/.test(text);
+  if (to === 'zh') return /[\u4e00-\u9fff]/.test(text) && !/[\u3040-\u30ff\uac00-\ud7af]/.test(text);
+  return !/[\u3040-\u30ff\uac00-\ud7af]/.test(text);
+}
+
 export function cacheKey(text: string, from: Lang, to: Lang) {
   return createHash('sha256').update(`${from}|${to}|${text}`).digest('hex');
 }
@@ -133,7 +149,8 @@ export async function translateMany(texts: string[], from: Lang, to: Lang): Prom
   if (from === to) return texts.map((text) => ({ text, machine: false }));
   const keys = texts.map((t) => cacheKey(t, from, to));
   const cached = await prisma.translation.findMany({ where: { key: { in: [...new Set(keys)] } } });
-  const byKey = new Map(cached.map((c) => [c.key, c.text]));
+  // 以前に保存された、別の言語の訳は使わない
+  const byKey = new Map(cached.filter((c) => looksLike(c.text, to, c.source)).map((c) => [c.key, c.text]));
   const missing = [...new Set(texts.filter((t, i) => t.trim() && !byKey.has(keys[i])))];
   const provider = translatorName();
   if (missing.length && provider !== 'none') {
@@ -160,7 +177,12 @@ export async function translateMany(texts: string[], from: Lang, to: Lang): Prom
         }
         const rows = chunk.flatMap((source, k) => {
           const text = out[k];
-          return text == null ? [] : [{ key: cacheKey(source, from, to), source, sourceLang: from, targetLang: to, text, provider: used }];
+          // 別の言語で返ってきた訳は保存しない（原文のまま表示し、次の機会に訳し直す）
+          if (text == null || !looksLike(text, to, source)) {
+            if (text != null) console.warn('translation in wrong language skipped', used, from, to);
+            return [];
+          }
+          return [{ key: cacheKey(source, from, to), source, sourceLang: from, targetLang: to, text, provider: used }];
         });
         await prisma.translation.createMany({ data: rows, skipDuplicates: true });
         for (const r of rows) byKey.set(r.key, r.text);

@@ -1,26 +1,29 @@
 :root {
-  /* 濃紺の画面に、オレンジ（操作できるもの）とピンク（ロゴ・キャラクター）を差し色にする */
-  --bg: #121a30;
-  --surface: #1a2340;
-  --surface-2: #222c4c;
-  --ink: #eef1f8;
-  --muted: #9aa3bd;
-  --line: #2c3758;
-  --brand: #f9a24b;
-  --brand-ink: #1b1f2e;
-  --brand-soft: rgb(249 162 75 / 0.16);
-  --accent: #ff5c8d;
-  --ok: #4cc38a;
-  --limited: #f2b84b;
-  --full: #ff6b6b;
-  --warn-bg: rgb(242 184 75 / 0.14);
-  --err-bg: rgb(255 107 107 / 0.14);
-  --info-bg: rgb(110 160 255 / 0.14);
-  --ok-bg: rgb(76 195 138 / 0.14);
-  --radius: 14px;
+  /* オープニングの浮世絵（夕暮れの富士と湾）に合わせた色：藍の夜空・夕焼けの橙・朱・和紙の生成り・抹茶 */
+  --bg: #0d1830;
+  --surface: #15264a;
+  --surface-2: #1c3058;
+  --ink: #f3e7cf;
+  --muted: #b8ad95;
+  --line: rgb(243 231 207 / 0.16);
+  --brand: #f2a65e;
+  --brand-ink: #1d1410;
+  --brand-soft: rgb(242 166 94 / 0.16);
+  --accent: #c94a30;
+  --ok: #8fc46a;
+  --limited: #f2c14e;
+  --full: #f07a68;
+  --warn-bg: rgb(242 193 78 / 0.14);
+  --err-bg: rgb(240 122 104 / 0.15);
+  --info-bg: rgb(120 160 220 / 0.15);
+  --ok-bg: rgb(143 196 106 / 0.14);
+  /* 夕焼けのグラデーション（主ボタン・ロゴと同じ流れ） */
+  --sunset: linear-gradient(100deg, #f6c27a, #f2a65e 45%, #e8774a);
+  --serif: 'Noto Serif JP', 'Hiragino Mincho ProN', 'Yu Mincho', 'Noto Serif SC', 'Noto Serif KR', serif;
+  --radius: 12px;
   /* グラフの棒（1系列）。暗い背景で明るさの帯とコントラストを検証済み */
   --chart-bar: #c86f22;
-  --shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 4px 14px rgb(0 0 0 / 0.25);
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.35), 0 6px 18px rgb(3 8 20 / 0.45);
   color-scheme: dark;
   font-family: system-ui, -apple-system, 'Segoe UI', 'Hiragino Sans', 'Noto Sans JP', 'Noto Sans SC', 'Noto Sans KR', 'Microsoft YaHei', sans-serif;
   font-size: 16px;
@@ -1635,7 +1638,11 @@ td {
   margin: 0 0 0.3rem;
   color: var(--muted);
 }
+/* 右端を薄くして「まだ続きがある」と分かるようにする */
 .scene-row {
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent);
+  padding-right: 28px;
   display: flex;
   gap: 0.5rem;
   overflow-x: auto;
@@ -2263,4 +2270,247 @@ td {
 }
 .top-logo .wordmark {
   font-size: 2.3rem;
+}
+
+/* チャットの文字数 */
+.chat-count {
+  margin: -0.2rem 0 0;
+  text-align: right;
+}
+.chat-count.warn {
+  color: var(--limited);
+}
+
+
+/* ============================================================
+   オープニングに合わせた見た目（浮世絵の夕暮れ）
+   ============================================================ */
+/* 背景：藍の夜空に、ごく薄い青海波 */
+body {
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(120% 60% at 50% -10%, rgb(242 166 94 / 0.10), transparent 60%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='28' viewBox='0 0 56 28'%3E%3Cg fill='none' stroke='%23f3e7cf' stroke-opacity='0.045' stroke-width='1'%3E%3Cpath d='M0 28a28 28 0 0 1 56 0M9 28a19 19 0 0 1 38 0M18 28a10 10 0 0 1 20 0M-28 14a28 28 0 0 1 56 0M-19 14a19 19 0 0 1 38 0M-10 14a10 10 0 0 1 20 0M28 14a28 28 0 0 1 56 0M37 14a19 19 0 0 1 38 0M46 14a10 10 0 0 1 20 0'/%3E%3C/g%3E%3C/svg%3E");
+  background-attachment: fixed;
+}
+/* 見出しと店名は明朝（オープニングの言語ボタンと同じ） */
+h1,
+h2,
+.top-title,
+.shop-body h3,
+.sheet-head h2,
+.jp-card h2 {
+  font-family: var(--serif);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+h2 {
+  color: var(--ink);
+}
+a {
+  color: var(--brand);
+}
+
+/* 上のバー：藍に、下端へ夕焼けの細い線 */
+.topbar {
+  background: rgb(13 24 48 / 0.92);
+  border-bottom: none;
+  box-shadow: 0 1px 0 rgb(243 231 207 / 0.08);
+}
+.topbar::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -2px;
+  height: 2px;
+  background: var(--sunset);
+  opacity: 0.75;
+}
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--ink);
+  min-width: 0;
+}
+.brand-word {
+  font-size: 1.25rem;
+}
+.brand-biz {
+  font-family: var(--serif);
+  font-weight: 700;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@media (max-width: 430px) {
+  .brand-word {
+    font-size: 1.05rem;
+  }
+  .brand-mark {
+    width: 26px;
+    height: 26px;
+  }
+}
+@media (max-width: 370px) {
+  .brand-word {
+    display: none;
+  }
+}
+.lang-select {
+  background: rgb(14 30 58 / 0.6);
+  border-color: rgb(243 231 207 / 0.3);
+}
+
+/* 下のナビ */
+.bottomnav {
+  background: rgb(13 24 48 / 0.96);
+  border-top: 1px solid rgb(243 231 207 / 0.12);
+  backdrop-filter: blur(6px);
+}
+.bottomnav a.active {
+  color: var(--brand);
+}
+.bottomnav a.active::before {
+  content: '';
+  position: absolute;
+  top: -0.3rem;
+  left: 25%;
+  right: 25%;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--sunset);
+}
+
+/* ボタン：主ボタンは夕焼けのグラデーション、ほかは半透明の藍に生成りの細い縁 */
+.btn {
+  background: rgb(14 30 58 / 0.55);
+  border-color: rgb(243 231 207 / 0.35);
+  color: var(--ink);
+}
+.btn:hover:not(:disabled) {
+  border-color: rgb(255 214 160 / 0.8);
+}
+.btn-primary {
+  background: var(--sunset);
+  border-color: transparent;
+  color: var(--brand-ink);
+  box-shadow: 0 2px 10px rgb(232 119 74 / 0.25);
+}
+.btn-primary:hover:not(:disabled) {
+  filter: brightness(1.05);
+  border-color: transparent;
+}
+.btn-ghost {
+  background: transparent;
+}
+.btn.on {
+  background: var(--brand-soft);
+  border-color: var(--brand);
+}
+
+/* チップ */
+.chip {
+  background: rgb(14 30 58 / 0.5);
+  border-color: rgb(243 231 207 / 0.25);
+}
+button.chip:hover {
+  border-color: rgb(255 214 160 / 0.7);
+}
+.chip.on,
+.chip-toggle.on,
+.chip[aria-pressed='true'] {
+  background: var(--sunset);
+  border-color: transparent;
+  color: var(--brand-ink);
+}
+
+/* カード：浮世絵の版のように、生成りの細い枠 */
+.card,
+.top-choice,
+.review-item {
+  background: linear-gradient(180deg, rgb(28 48 88 / 0.92), rgb(21 38 74 / 0.92));
+  border: 1px solid rgb(243 231 207 / 0.14);
+  box-shadow: var(--shadow);
+}
+.card:hover {
+  border-color: rgb(243 231 207 / 0.28);
+}
+.shop-photo {
+  border: 1px solid rgb(243 231 207 / 0.18);
+}
+
+/* お知らせ */
+.notice {
+  border: 1px solid rgb(243 231 207 / 0.1);
+}
+
+/* 入力欄 */
+input,
+select,
+textarea {
+  background: rgb(10 20 42 / 0.7);
+  border-color: rgb(243 231 207 / 0.22);
+}
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 2px solid rgb(242 166 94 / 0.6);
+  outline-offset: 1px;
+  border-color: transparent;
+}
+
+/* 下から出るシート */
+.sheet {
+  background: var(--bg);
+  border-top: 2px solid transparent;
+  border-image: var(--sunset) 1;
+}
+
+/* トップページ：オープニングの一枚絵を、背景にうっすら敷く */
+.top-page {
+  position: relative;
+  background:
+    linear-gradient(180deg, rgb(13 24 48 / 0.55) 0%, rgb(13 24 48 / 0.82) 45%, rgb(13 24 48 / 0.97) 100%),
+    url('/intro/edo-sm.webp') center 30% / cover no-repeat,
+    var(--bg);
+}
+@media (max-aspect-ratio: 1/1) {
+  .top-page {
+    background:
+      linear-gradient(180deg, rgb(13 24 48 / 0.5) 0%, rgb(13 24 48 / 0.85) 50%, rgb(13 24 48 / 0.97) 100%),
+      url('/intro/edo-mobile.webp') center top / cover no-repeat,
+      var(--bg);
+  }
+}
+.top-tagline {
+  color: var(--ink);
+  opacity: 0.85;
+}
+.top-title {
+  color: var(--ink);
+}
+.top-choice {
+  border-radius: 14px;
+  backdrop-filter: blur(4px);
+}
+.top-choice:hover {
+  border-color: rgb(255 214 160 / 0.5);
+}
+
+/* 店の詳細の見出しの下に夕焼けの細い線 */
+.detail > header h1 {
+  margin-bottom: 0.2rem;
+}
+.detail section > h2::after,
+.shop-reviews > h2::after {
+  content: '';
+  display: block;
+  width: 2.2rem;
+  height: 2px;
+  margin-top: 0.35rem;
+  border-radius: 2px;
+  background: var(--sunset);
 }

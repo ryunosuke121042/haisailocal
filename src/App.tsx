@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, NavLink, Outlet, Route, Routes, useLocation, u
 import { CURRENCIES, LANG_LABELS, LANGS, type Lang } from '../shared/constants';
 import { Character, CharacterProvider } from './components/Character';
 import { Spinner } from './components/ui';
+import { LogoMark, Wordmark } from './components/Logo';
 import { AppProvider, guessLang, useApp } from './store';
 import Top from './pages/Top';
 import List from './pages/List';
@@ -51,8 +52,10 @@ function Layout() {
   return (
     <div className="app">
       <header className="topbar">
-        <NavLink to={`/${lang}`} className="brand" end>
-          {t('appName')}
+        <NavLink to={`/${lang}`} className="brand" end aria-label={t('appName')}>
+          {/* オープニングと同じロゴ（地球のマーク＋文字） */}
+          <LogoMark size={30} className="brand-mark" />
+          <Wordmark className="brand-word" />
         </NavLink>
         <span className="spacer" />
         {!loc.pathname.endsWith('/start') && (
@@ -121,7 +124,7 @@ function Layout() {
 
 // 画面の描画で落ちても真っ白にせず、原因と再読み込みボタンを出す。
 // resetKey が変わったら（別の画面へ移ったら）エラー表示を解除する。fallback を渡すと、その部分だけを差し替える
-class ErrorBoundary extends Component<{ children: ReactNode; resetKey?: string; fallback?: (reset: () => void) => ReactNode }, { error: Error | null; key?: string }> {
+export class ErrorBoundary extends Component<{ children: ReactNode; resetKey?: string; fallback?: (reset: () => void) => ReactNode }, { error: Error | null; key?: string }> {
   state = { error: null as Error | null, key: this.props.resetKey };
   static getDerivedStateFromError(error: Error) {
     return { error };

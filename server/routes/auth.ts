@@ -7,7 +7,7 @@ import { appUrl, emailMode, sendMail } from '../email.js';
 import { HttpError, parse, type Router } from '../http.js';
 import { travelerMail } from '../mailtext.js';
 import { translatorName } from '../translate.js';
-import { aiEnabled } from '../ai.js';
+import { aiEnabled, aiProviders } from '../ai.js';
 
 /** デモ用の動き（デモ用アカウントへのワンタップのログイン、デモの表示）。本番運用では DEMO_MODE=off にする */
 export function demoMode() {
@@ -27,7 +27,7 @@ export function authRoutes(r: Router) {
     const u = await currentUser(ctx);
     return {
       user: u ? publicUser(u) : null,
-      config: { translator: translatorName(), ai: aiEnabled(), email: emailMode(), pushPublicKey: process.env.VAPID_PUBLIC_KEY ?? null, demo: demoMode() },
+      config: { translator: translatorName(), ai: aiEnabled(), aiProviders: aiProviders(), email: emailMode(), pushPublicKey: process.env.VAPID_PUBLIC_KEY ?? null, demo: demoMode() },
     };
   });
 
@@ -93,8 +93,9 @@ export function authRoutes(r: Router) {
   // デモ用：パスワードを入れずに、シードのデモ用アカウントでログインする
   r.post('/auth/demo-login', async (ctx) => {
     if (!demoMode()) throw new HttpError(404, 'not_found');
-    const b = parse(z.object({ role: z.enum(['traveler', 'business', 'admin']) }), ctx.body);
-    const email = { traveler: 'traveler@example.com', business: 'biz@example.com', admin: 'admin@example.com' }[b.role];
+    // 運営の画面には、デモでもパスワードなしでは入れない
+    const b = parse(z.object({ role: z.enum(['traveler', 'business']) }), ctx.body);
+    const email = { traveler: 'traveler@example.com', business: 'biz@example.com' }[b.role];
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) throw new HttpError(404, 'demo_account_missing');
     await startSession(ctx, user.id);

@@ -23,7 +23,7 @@ import {
 import { filtersToQuery, type Filters } from '../../shared/filters';
 import { jstDateString } from '../../shared/time';
 import { Mascot } from '../components/Character';
-import { areaName, toggle } from '../components/ui';
+import { areaName, toggle, aiServiceName } from '../components/ui';
 import type { Key } from '../i18n';
 import { load, store, useApp } from '../store';
 
@@ -82,7 +82,7 @@ export function Maru({ talking }: { talking?: boolean }) {
 }
 
 export default function Start() {
-  const { t, lang, me, prefs, profile, setPrefs, currency } = useApp();
+  const { t, lang, me, prefs, profile, setPrefs, currency, config } = useApp();
   const nav = useNavigate();
   const [saved, setSaved] = useState<Saved>(() => load<Saved>(KEY, { step: 'lang', answers: {} }));
   const [cur, setCur] = useState(currency);
@@ -90,7 +90,10 @@ export default function Start() {
   const { step, answers } = saved;
   const charOn = !profile.characterHidden;
 
-  useEffect(() => end.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }), [step]);
+  // scrollIntoView は新しいブラウザでは Promise を返すので、{ } で包んで何も返さない
+  useEffect(() => {
+    end.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  }, [step]);
 
   if (prefs.chosen && step === 'lang') return <Navigate to={`/${lang}`} replace />;
 
@@ -304,7 +307,7 @@ export default function Start() {
         {step === 'sensitive' && (
           <div className="stack-s">
             <div className="consent-box small">
-              <p>{t('sensitiveWhy')}</p>
+              <p>{t('sensitiveWhy', { ai: aiServiceName(config) })}</p>
             </div>
             <div className="actions">
               <button className="btn btn-primary" onClick={() => go({ consent: true })}>

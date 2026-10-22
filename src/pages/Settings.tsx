@@ -1,22 +1,25 @@
 // 設定：表示言語・通貨、今日の希望（予算・食事制限）、宗教上の制限・アレルギー（同意した人だけ。同意の取り下げで削除）、
 // キャラクターの表示・非表示、アカウント
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { ALLERGENS, BUDGET_BANDS, CURRENCIES, DIET_SUPPORT, LANG_LABELS, LANGS, RELIGIOUS } from '../../shared/constants';
 import type { Prefs } from '../../shared/filters';
 import { jstDateString } from '../../shared/time';
 import { post } from '../api';
 import { useCharacter } from '../components/Character';
-import { Chip, toggle } from '../components/ui';
+import { Chip, toggle, aiServiceName } from '../components/ui';
 import { store, useApp } from '../store';
 
 export default function Settings() {
-  const { t, lang, me, setMe, currency, profile, setPrefs } = useApp();
+  const { t, lang, me, setMe, currency, profile, setPrefs, config } = useApp();
   const nav = useNavigate();
   const [p, setP] = useState<Prefs>(profile.prefs);
   const [consent, setConsent] = useState(profile.sensitiveConsent);
   const [saved, setSaved] = useState(false);
   useCharacter({ line: t('say_settings') });
+
+  // ほかの画面と同じく、ログインしていなければログイン画面へ（言語と通貨は上のメニューから変えられる）
+  if (me?.role !== 'TRAVELER') return <Navigate to={`/${lang}/login?next=${encodeURIComponent(`/${lang}/settings`)}`} replace />;
 
   async function save(next: Prefs, nextConsent = consent) {
     const clean: Prefs = { ...next, ...(nextConsent ? {} : { religious: [], allergens: [] }) };
@@ -74,7 +77,7 @@ export default function Settings() {
       <section className="stack-s">
         <h2>{t('sensitiveTitle')}</h2>
         <div className="consent-box small">
-          <p>{t('sensitiveWhy')}</p>
+          <p>{t('sensitiveWhy', { ai: aiServiceName(config) })}</p>
         </div>
         <label className="check">
           <input type="checkbox" checked={consent} onChange={(e) => void save(p, e.target.checked)} />

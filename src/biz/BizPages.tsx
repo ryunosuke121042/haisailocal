@@ -1,7 +1,16 @@
 // 事業者画面：予約一覧・予約の詳細（キャンセル・来店なし）・チャット
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { BIZ_CANCEL_REASON_JA, BIZ_CANCEL_REASONS, DIETARY_JA, LIMITS, REVIEW_TAG_JA, type BizCancelReason, type Dietary, type ReviewTag } from '../../shared/constants';
+import {
+  BIZ_CANCEL_REASON_JA,
+  BIZ_CANCEL_REASONS,
+  DIETARY_JA,
+  LIMITS,
+  REVIEW_TAG_JA,
+  type BizCancelReason,
+  type Dietary,
+  type ReviewTag,
+} from '../../shared/constants';
 import { ApiError, get, post, put } from '../api';
 import type { ChatMessage, ReservationStatus } from '../types';
 import { PushPrompt, useBiz } from './BizApp';
@@ -197,7 +206,9 @@ export function BizReservation() {
         <dd>{r.messageJa || r.message ? <Translated ja={r.messageJa} original={r.message} /> : 'なし'}</dd>
       </dl>
       {r.status === 'CANCELED_BY_TRAVELER' && r.lateCancel && (
-        <p className="notice notice-warn small">無料キャンセルの期限後のキャンセルです{r.cancelFeeJpy ? `（キャンセル料の目安 ${yen(r.cancelFeeJpy)}。請求は運営が判断します）` : ''}。</p>
+        <p className="notice notice-warn small">
+          無料キャンセルの期限後のキャンセルです{r.cancelFeeJpy ? `（キャンセル料の目安 ${yen(r.cancelFeeJpy)}。請求は運営が判断します）` : ''}。
+        </p>
       )}
       {r.status === 'CANCELED_BY_BUSINESS' && r.bizCancelReason && (
         <p className="notice small">
@@ -216,11 +227,19 @@ export function BizReservation() {
         )}
         {r.canMarkNoShow &&
           (r.status === 'NO_SHOW' ? (
-            <button className="btn btn-ghost" disabled={busy} onClick={() => void act(`/biz/reservations/${r.id}/no-show`, { noShow: false }, '「来店なし」を取り消しました。')}>
+            <button
+              className="btn btn-ghost"
+              disabled={busy}
+              onClick={() => void act(`/biz/reservations/${r.id}/no-show`, { noShow: false }, '「来店なし」を取り消しました。')}
+            >
               「来店なし」を取り消す
             </button>
           ) : (
-            <button className="btn" disabled={busy} onClick={() => void act(`/biz/reservations/${r.id}/no-show`, { noShow: true }, '「来店なし」を記録しました。')}>
+            <button
+              className="btn"
+              disabled={busy}
+              onClick={() => void act(`/biz/reservations/${r.id}/no-show`, { noShow: true }, '「来店なし」を記録しました。')}
+            >
               来店なし
             </button>
           ))}
@@ -246,7 +265,11 @@ export function BizReservation() {
             <textarea rows={2} maxLength={300} value={note} onChange={(e) => setNote(e.target.value)} />
           </label>
           <div className="actions">
-            <button className="btn btn-danger" disabled={busy} onClick={() => void act(`/biz/reservations/${r.id}/cancel`, { reason, noteJa: note }, 'キャンセルし、旅行者にメールで知らせました。')}>
+            <button
+              className="btn btn-danger"
+              disabled={busy}
+              onClick={() => void act(`/biz/reservations/${r.id}/cancel`, { reason, noteJa: note }, 'キャンセルし、旅行者にメールで知らせました。')}
+            >
               キャンセルを確定
             </button>
             <button className="btn btn-ghost" onClick={() => setCancelOpen(false)}>
@@ -361,7 +384,10 @@ export function BizConversation() {
     const t = setInterval(load, 15_000);
     return () => clearInterval(t);
   }, [load]);
-  useEffect(() => end.current?.scrollIntoView({ block: 'end' }), [c?.messages.length]);
+  // scrollIntoView は新しいブラウザでは Promise を返すので、{ } で包んで何も返さない
+  useEffect(() => {
+    end.current?.scrollIntoView({ block: 'end' });
+  }, [c?.messages.length]);
 
   // 一度読み込めていれば、定期確認の失敗では画面を消さない
   if (!c) return err ? <p className="notice notice-error">読み込めませんでした。</p> : <div className="spinner" />;
@@ -391,7 +417,9 @@ export function BizConversation() {
           <div key={m.id} className={`msg ${m.fromMe ? 'msg-me' : 'msg-them'}`}>
             {m.photo && <MessagePhoto src={m.photo} alt="写真" />}
             {m.text && (m.fromMe ? <span className="pre">{m.text}</span> : <Translated ja={m.text} original={m.original} />)}
-            <time className="small muted">{new Date(m.at).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</time>
+            <time className="small muted">
+              {new Date(m.at).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+            </time>
           </div>
         ))}
         <div ref={end} />
@@ -429,11 +457,22 @@ export function BizConversation() {
           disabled={busy}
           onPick={setPhoto}
         />
-        <textarea ref={input} rows={2} maxLength={LIMITS.messageMaxChars} value={text} onChange={(e) => setText(e.target.value)} placeholder="日本語で入力" aria-label="メッセージ" />
+        <textarea
+          ref={input}
+          rows={2}
+          maxLength={LIMITS.messageMaxChars}
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          placeholder="日本語で入力"
+          aria-label="メッセージ"
+        />
         <button className="btn btn-primary" disabled={busy || (!text.trim() && !photo)}>
           送信
         </button>
       </form>
+      <p className={`chat-count small muted ${text.length > LIMITS.messageMaxChars * 0.9 ? 'warn' : ''}`} aria-live="polite">
+        {text.length}/{LIMITS.messageMaxChars}
+      </p>
       {sendErr && <p className="notice notice-error">{sendErr}</p>}
       <p className="small">
         <button
@@ -491,7 +530,9 @@ export function BizNotifications() {
                 <br />
                 <span className="small pre">{n.payload.body}</span>
                 <br />
-                <span className="small muted">{new Date(n.at).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                <span className="small muted">
+                  {new Date(n.at).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                </span>
               </span>
             </Link>
           </li>
@@ -530,13 +571,18 @@ export function BizReviews() {
   return (
     <div className="stack">
       <h1>評価</h1>
-      <p className="small muted">アプリで予約して来店した旅行者だけが、1回の予約につき1件、星とタグで評価します（自由記述はありません）。高い評価を頼んだり、見返りと引き換えに評価を求めたりすることは規約で禁止しています。</p>
+      <p className="small muted">
+        アプリで予約して来店した旅行者だけが、1回の予約につき1件、星とタグで評価します（自由記述はありません）。高い評価を頼んだり、見返りと引き換えに評価を求めたりすることは規約で禁止しています。
+      </p>
       {list.length === 0 && <p className="notice">まだ評価はありません。</p>}
       <ul className="list">
         {list.map((r) => (
           <li key={r.id} className="card stack-s">
             <div className="row gap-s">
-              <strong className="grow">{'★'.repeat(r.stars)}{'☆'.repeat(5 - r.stars)}</strong>
+              <strong className="grow">
+                {'★'.repeat(r.stars)}
+                {'☆'.repeat(5 - r.stars)}
+              </strong>
               <span className="small muted">
                 {r.date} · {r.listing}
               </span>
@@ -627,7 +673,7 @@ export function BizSettings() {
       }}
     >
       <h1>設定</h1>
-      <PushPrompt />
+      <PushPrompt dismissible={false} />
       <label>
         事業者名（屋号）
         <input required maxLength={80} value={name} onChange={(e) => setName(e.target.value)} />

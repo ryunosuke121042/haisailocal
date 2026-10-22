@@ -1,8 +1,10 @@
 // 事業者画面（スマホファースト、日本語のみ）
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import { Link, Navigate, NavLink, Route, Routes, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, Navigate, NavLink, Route, Routes, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { ApiError, get, post } from '../api';
 import type { Me } from '../types';
+import { ErrorBoundary } from '../App';
+import { LogoMark } from '../components/Logo';
 import { BizClosed } from './BizClosed';
 import { BizListing } from './BizListing';
 import { BizConversation, BizMessages, BizNotifications, BizReservation, BizReservations, BizReviews, BizSettings } from './BizPages';
@@ -12,7 +14,14 @@ export interface BizHomeData {
   email: string;
   unreadNotices: number;
   push: { enabled: boolean; registeredOnThisAccount: boolean; publicKey: string | null };
-  listings: { id: string; nameJa: string; status: 'DRAFT' | 'PUBLISHED' | 'HIDDEN' | 'SUSPENDED'; missing: string[]; photo: string | null; hasSlots: boolean }[];
+  listings: {
+    id: string;
+    nameJa: string;
+    status: 'DRAFT' | 'PUBLISHED' | 'HIDDEN' | 'SUSPENDED';
+    missing: string[];
+    photo: string | null;
+    hasSlots: boolean;
+  }[];
   upcomingWeek: number;
   unreadMessages: number;
 }
@@ -59,6 +68,7 @@ export default function BizApp() {
 }
 
 function BizShell() {
+  const loc = useLocation();
   const [home, setHome] = useState<BizHomeData | null>(null);
   const [demo, setDemo] = useState(false);
   useEffect(() => {
@@ -78,7 +88,8 @@ function BizShell() {
     <Ctx.Provider value={{ home, reload }}>
       <header className="topbar">
         <Link to="/biz" className="brand">
-          事業者{home?.business.name && `｜${home.business.name}`}
+          <LogoMark size={28} className="brand-mark" />
+          <span className="brand-biz">事業者{home?.business.name && `｜${home.business.name}`}</span>
         </Link>
         <span className="spacer" />
         <Link to="/biz/notifications" className="icon-btn bell" aria-label="お知らせ">
@@ -94,21 +105,43 @@ function BizShell() {
           ログアウト
         </button>
       </header>
-      {demo && <div className="demo-banner small">デモ：表示されている店舗・予約・旅行者はすべて架空のサンプルデータです。メールは送られません（運営画面の「送信メール」で確認できます）。</div>}
+      {demo && (
+        <div className="demo-banner small">
+          デモ：表示されている店舗・予約・旅行者はすべて架空のサンプルデータです。メールは送られません（運営画面の「送信メール」で確認できます）。
+        </div>
+      )}
       <main className="main">
-        <Routes>
-          <Route index element={<BizHome />} />
-          <Route path="listing/:id" element={<BizListing />} />
-          <Route path="listing/:id/closed" element={<BizClosed />} />
-          <Route path="reservations" element={<BizReservations />} />
-          <Route path="reservations/:id" element={<BizReservation />} />
-          <Route path="messages" element={<BizMessages />} />
-          <Route path="messages/:id" element={<BizConversation />} />
-          <Route path="notifications" element={<BizNotifications />} />
-          <Route path="reviews" element={<BizReviews />} />
-          <Route path="settings" element={<BizSettings />} />
-          <Route path="*" element={<Navigate to="/biz" replace />} />
-        </Routes>
+        {/* 画面の中身だけが落ちたときは、メニューを残して「再試行／戻る」を出す（旅行者側と同じ） */}
+        <ErrorBoundary
+          resetKey={loc.pathname}
+          fallback={(reset) => (
+            <div className="notice notice-error stack-s">
+              <p>エラーが発生しました。もう一度お試しください。入力中の内容が消えることがあります。</p>
+              <p className="row gap-s">
+                <button className="btn btn-primary" onClick={reset}>
+                  再試行
+                </button>
+                <button className="btn" onClick={() => history.back()}>
+                  戻る
+                </button>
+              </p>
+            </div>
+          )}
+        >
+          <Routes>
+            <Route index element={<BizHome />} />
+            <Route path="listing/:id" element={<BizListing />} />
+            <Route path="listing/:id/closed" element={<BizClosed />} />
+            <Route path="reservations" element={<BizReservations />} />
+            <Route path="reservations/:id" element={<BizReservation />} />
+            <Route path="messages" element={<BizMessages />} />
+            <Route path="messages/:id" element={<BizConversation />} />
+            <Route path="notifications" element={<BizNotifications />} />
+            <Route path="reviews" element={<BizReviews />} />
+            <Route path="settings" element={<BizSettings />} />
+            <Route path="*" element={<Navigate to="/biz" replace />} />
+          </Routes>
+        </ErrorBoundary>
       </main>
       <nav className="bottomnav">
         <NavLink to="/biz" end>
@@ -155,7 +188,9 @@ function BizHome() {
 
       <section className="stack-s">
         <h1>店舗</h1>
-        {home.listings.length === 0 && <p className="notice notice-info">まず店舗を登録しましょう。日本語で入力すれば、英語と中国語（簡体字）に自動で翻訳して旅行者に表示します。</p>}
+        {home.listings.length === 0 && (
+          <p className="notice notice-info">まず店舗を登録しましょう。日本語で入力すれば、英語と中国語（簡体字）に自動で翻訳して旅行者に表示します。</p>
+        )}
         <ul className="list">
           {home.listings.map((l) => (
             <li key={l.id} className="card stack-s">
@@ -189,6 +224,8 @@ function BizHome() {
           className="btn"
           disabled={busy}
           onClick={async () => {
+            // 押しただけで空の下書きができないよう、先に確かめる
+            if (!confirm('新しい店舗の下書きを作りますか？（入力して保存するまで旅行者には公開されません）')) return;
             setBusy(true);
             setErr(null);
             try {
@@ -196,7 +233,11 @@ function BizHome() {
               await reload();
               nav(`/biz/listing/${r.id}`);
             } catch (e) {
-              setErr(e instanceof ApiError && e.code === 'too_many_listings' ? '1つのアカウントで登録できる店舗は10件までです。' : '店舗を追加できませんでした。もう一度お試しください。');
+              setErr(
+                e instanceof ApiError && e.code === 'too_many_listings'
+                  ? '1つのアカウントで登録できる店舗は10件までです。'
+                  : '店舗を追加できませんでした。もう一度お試しください。',
+              );
             } finally {
               setBusy(false);
             }
@@ -269,6 +310,23 @@ function BizLogin({ onLogin }: { onLogin: (m: Me) => void }) {
 }
 
 function BizSignup({ onLogin }: { onLogin: (m: Me) => void }) {
+  // 掲載文やメッセージの送り先（翻訳サービス）は、実際の設定に合わせて示す
+  const [translatorText, setTranslatorText] = useState('翻訳サービス');
+  useEffect(() => {
+    get<{ config: { translator: string; aiProviders?: ('claude' | 'gemini')[] } }>('/me')
+      .then(({ config }) => {
+        const ai = { gemini: 'AI（Google の Gemini、米国）', claude: 'AI（Anthropic の Claude、米国）' } as const;
+        const names = (config.aiProviders ?? []).map((p) => ai[p]);
+        setTranslatorText(
+          names.length
+            ? `${names.join('または')}（使えないときは無料の機械翻訳 MyMemory、イタリア）`
+            : config.translator === 'mymemory'
+              ? '無料の機械翻訳 MyMemory（Translated S.r.l.、イタリア）'
+              : '翻訳サービス',
+        );
+      })
+      .catch(() => {});
+  }, []);
   const nav = useNavigate();
   const [businessName, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -306,7 +364,10 @@ function BizSignup({ onLogin }: { onLogin: (m: Me) => void }) {
         <span className="small muted">8文字以上。ご家族と共有する場合は、推測されにくいものにしてください。</span>
       </label>
       <div className="consent-box small">
-        <p>登録した店舗は、保存すると旅行者にすぐ公開されます。掲載文と旅行者とのメッセージは AI（Anthropic、米国）で翻訳します。事実と異なる掲載は、報告を受けて運営が非公開にすることがあります。</p>
+        <p>
+          登録した店舗は、保存すると旅行者にすぐ公開されます。掲載文と旅行者とのメッセージは、{translatorText}
+          で翻訳します（送るのは文章だけです）。事実と異なる掲載は、報告を受けて運営が非公開にすることがあります。
+        </p>
         <label className="check">
           <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} required />
           上記に同意する
@@ -400,11 +461,20 @@ const isStandalone = () => window.matchMedia('(display-mode: standalone)').match
  * プッシュ通知を推進する：オンにしていない端末では、ホームの一番上で強く勧める（オフでも使える。メールでも届く）。
  * オンにした端末は、開くたびに宛先を登録し直す
  */
-export function PushPrompt() {
+/** dismissible：ホームでは閉じられる。設定画面では閉じたあとも出す（そこからオンにできるように） */
+export function PushPrompt({ dismissible = true }: { dismissible?: boolean }) {
   const { home, reload } = useBiz();
   const key = home?.push.publicKey;
   const [state, setState] = useState<'checking' | 'ok' | 'need' | 'denied' | 'ios-home' | 'unsupported'>('checking');
   const [err, setErr] = useState(false);
+  // 「閉じる」を押したら、この端末では次から出さない
+  const [closed, setClosed] = useState(() => {
+    try {
+      return localStorage.getItem('hl.pushPromptClosed') === '1';
+    } catch {
+      return false;
+    }
+  });
 
   useEffect(() => {
     (async () => {
@@ -439,10 +509,30 @@ export function PushPrompt() {
     }
   }
 
-  if (state === 'ok' || state === 'checking' || state === 'unsupported') return null;
+  if ((dismissible && closed) || state === 'ok' || state === 'checking' || state === 'unsupported') return null;
   return (
     <div className="notice notice-warn push-prompt stack-s">
-      <strong>📣 プッシュ通知をオンにしてください</strong>
+      <div className="row gap-s">
+        <strong className="grow">📣 プッシュ通知をオンにしてください</strong>
+        {dismissible && (
+          <button
+            type="button"
+            className="icon-btn"
+            aria-label="閉じる（設定からいつでもオンにできます）"
+            title="閉じる"
+            onClick={() => {
+              setClosed(true);
+              try {
+                localStorage.setItem('hl.pushPromptClosed', '1');
+              } catch {
+                /* 保存できなくても、この画面では閉じる */
+              }
+            }}
+          >
+            ✕
+          </button>
+        )}
+      </div>
       <p className="small">新しい予約（とくに当日の予約）やメッセージに、すぐ気づけます。オフのままでもメールでお知らせしますが、気づくのが遅れがちです。</p>
       {state === 'need' && (
         <button className="btn btn-primary" onClick={() => void enable()}>
