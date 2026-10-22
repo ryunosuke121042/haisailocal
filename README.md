@@ -34,7 +34,7 @@ npm run dev                  # http://localhost:5173 （/api も同じサーバ�
 npm test                     # 予約枠・締切・キャンセル期限・絞り込み・おすすめのテスト
 ```
 
-デモ用アカウント（パスワードはすべて `localtrip-demo`）：旅行者 `traveler@example.com`、事業者 `biz@example.com` ほか、運営 `admin@example.com`
+デモデータのアカウントのパスワードは、`npm run db:seed` を実行したときに1回だけ表示されます（環境変数 `SEED_PASSWORD` で指定することもできます）。パスワードはコードや README には書きません。
 
 ## 環境変数
 

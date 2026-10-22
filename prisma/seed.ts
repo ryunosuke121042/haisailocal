@@ -1,4 +1,5 @@
 // デモ用の初期データ。`npm run db:seed`（やり直すときは `npm run db:seed -- --reset`）
+import { randomBytes } from 'node:crypto';
 import { PrismaClient, type Prisma } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { freeCancelUntil, weekdayOf } from '../shared/booking.js';
@@ -7,7 +8,15 @@ import { cacheKey } from '../server/translate.js';
 import { MORE } from './seed-translations.js';
 
 const prisma = new PrismaClient();
-const PASSWORD = process.env.SEED_PASSWORD || 'localtrip-demo';
+// デモ用アカウントのパスワードはコードに書かない。SEED_PASSWORD がなければ、実行のたびにランダムに作り、最後に1回だけ画面に出す
+const PASSWORD =
+  process.env.SEED_PASSWORD ||
+  (() => {
+    const a = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
+    let s = '';
+    for (const x of randomBytes(20)) s += a[x % a.length];
+    return s.match(/.{5}/g)!.join('-');
+  })();
 
 type Tr = { en: string; zh: string };
 const manual: { ja: string; tr: Tr }[] = [];
@@ -409,7 +418,7 @@ async function main() {
   await insertTranslations();
 
   console.log(`シード完了：公開中の店舗${SEEDS.length}件＋下書き1件`);
-  console.log(`デモ用アカウント（パスワードはすべて「${PASSWORD}」）`);
+  console.log(`デモ用アカウント（パスワードはすべて「${PASSWORD}」。この表示は1回だけなので控えてください）`);
   console.log('  旅行者：traveler@example.com   事業者：biz@example.com（宇治の茶農家）、torikichi@example.com ほか   運営：admin@example.com');
 }
 
